@@ -1,0 +1,2 @@
+Contains testing code for trying to do user-space dram corruption.
+See http://users.ece.cmu.edu/~omutlu/pub/dram-row-hammer_isca14.pdf
