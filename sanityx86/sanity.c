@@ -79,6 +79,9 @@ int main(int argc, char* argv[]){
   // Setup the timer
   setup_timer();
   
+  //TODO: These addresses are bad, see the paper:
+  // Importantly, we chose the values of X and Y so that they map to the same
+  // bank, but to diﬀerent rows within the bank
   void* addr1 = &(memory[PAGE_SIZE*(PAGES/5) + 50]);
   void* addr2 = &(memory[PAGE_SIZE*(PAGES/5)*3 + 50]);
 
