@@ -19,6 +19,12 @@ targets := sanity32 sanity64 benchmark32 benchmark64
 #targets
 default: all
 
+pagemap_read32.o: pagemap_read.c pagemap_read.h
+	${CC} -m32 ${CFLAGS} -o pagemap_read32.o -c pagemap_read.c
+
+pagemap_read64.o: pagemap_read.c pagemap_read.h
+	${CC} -m64 ${CFLAGS} -o pagemap_read64.o -c pagemap_read.c
+
 loop32.o: loop32.S
 	${CC} -m32 ${ASFLAGS} -c loop32.S
 
@@ -31,11 +37,11 @@ sanity32.o: sanity.c
 sanity64.o: sanity.c
 	${CC} -m64 ${CFLAGS} -o sanity64.o -c sanity.c
 
-sanity32: sanity32.o loop32.o
-	${CC} -m32 ${LDFLAGS} -o sanity32 loop32.o sanity32.o
+sanity32: sanity32.o loop32.o pagemap_read32.o
+	${CC} -m32 ${LDFLAGS} -o sanity32 loop32.o pagemap_read32.o sanity32.o
 
-sanity64: sanity64.o loop64.o
-	${CC} -m64 ${LDFLAGS} -o sanity64 loop64.o sanity64.o
+sanity64: sanity64.o loop64.o pagemap_read64.o
+	${CC} -m64 ${LDFLAGS} -o sanity64 loop64.o pagemap_read64.o sanity64.o
 
 bench32.o: bench32.S
 	${CC} -m32 ${ASFLAGS} -c bench32.S
@@ -57,6 +63,5 @@ benchmark64: benchmark64.o bench64.o
 
 all: $(targets)
 
-clean: 
+clean:
 	$(RM) $(targets) *.o
-
