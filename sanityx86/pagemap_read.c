@@ -26,8 +26,6 @@ unsigned long long read_pagemap(unsigned long virt_addr){
   //Shifting by virt-addr-offset number of bytes
   //and multiplying by the size of an address (the size of an entry in pagemap file)
   file_offset = virt_addr / getpagesize() * PAGEMAP_ENTRY;
-  //printf("Vaddr: 0x%lx, Page_size: %d, Entry_size: %d\n", virt_addr, getpagesize(), PAGEMAP_ENTRY);
-  //printf("Reading %s at 0x%llx\n", path_buf, (unsigned long long) file_offset);
   status = fseek(f, file_offset, SEEK_SET);
   if(status){
     perror("Failed to do fseek!");
@@ -39,25 +37,17 @@ unsigned long long read_pagemap(unsigned long virt_addr){
   for(i=0; i < PAGEMAP_ENTRY; i++){
     c = getc(f);
     if(c==EOF){
-      //      printf("\nReached end of the file\n");
       return 0;
     }
     c_buf[PAGEMAP_ENTRY - i - 1] = c;
-    //    printf("[%d]0x%x ", i, c);
   }
   for(i=0; i < PAGEMAP_ENTRY; i++){
-    //printf("%d ",c_buf[i]);
     read_val = (read_val << 8) + c_buf[i];
   }
-  //  printf("\n");
-  //  printf("Result: 0x%llx\n", (unsigned long long) read_val);
-  //if(GET_BIT(read_val, 63))
   if(GET_BIT(read_val, 63))
     return (unsigned long long) GET_PFN(read_val);
-  //    printf("PFN: 0x%llx\n",(unsigned long long) GET_PFN(read_val));
   else
     return 0;
-  //printf("Page not present\n");
 
   fseek(f,0,SEEK_SET);
   return 0;

@@ -13,7 +13,7 @@ void alarm_handler(int sig);
 
 #define PAGE_SIZE 4096
 #define PAGES 8192
-#define NUM_ITERS 1000000
+#define NUM_ITERS 100000000
 #define PHYS_PAGE_DELTA 2000
 //Define to randomize addresses every time
 #define RANDOMIZE_ADDRESS
@@ -66,8 +66,6 @@ int main(int argc, char* argv[]){
   int i,j, delta, done=0;
   //  printf("[Info] Searching for good addresses");
   for(i=0;i<PAGES;i++){
-    if(i%(PAGES/10) == 0)
-      printf(".");
     addr1 = &(memory[PAGE_SIZE*i]);
     for(j=0;j<PAGES;j++){
       addr2 = &(memory[PAGE_SIZE*j]);
