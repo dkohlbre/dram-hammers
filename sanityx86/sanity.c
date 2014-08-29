@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include "pagemap_read.h"
 
-void loop(void* addr1, void* addr2);
+void loop(void* addr1, void* addr2, int iterations);
 
 void setup_timer();
 int check_memory();
@@ -13,7 +13,7 @@ void alarm_handler(int sig);
 
 #define PAGE_SIZE 4096
 #define PAGES 8192
-#define SPIN_TIME 10
+#define NUM_ITERS 1000000
 #define PHYS_PAGE_DELTA 2000
 //Define to randomize addresses every time
 #define RANDOMIZE_ADDRESS
@@ -27,13 +27,10 @@ int check_memory(){
   int found;
   int i,j;
   found = 0;
-  printf("[Info] Checking all of memory array");
+  //  printf("[Info] Checking all of memory array");
   for(i=0;i<PAGES;i++){
-    if(!found && (i%(PAGES/4) == 0)){
-      printf(".");
-    }
     if(memcmp(&(memory[i*PAGE_SIZE]),mpage,PAGE_SIZE) != 0){
-      printf("\n[ALERT] Difference found! Page #%i:\n",i);
+      printf("[ALERT] Difference found! Page #%i:\n",i);
       for(j=0;j<PAGE_SIZE;j++){
         printf("%02X ",memory[(i*PAGE_SIZE)+j]);
       }
@@ -41,31 +38,13 @@ int check_memory(){
     }
   }
   if(!found){
-    printf("\n[Info] No differences found in run #%i\n",run);
+    printf("[Info] No differences found in run #%i\n----\n",run);
   }
   else{
-    printf("[Info] Differences found in run #%i\n",run);
+    printf("[Info] Differences found in run #%i\n====\n",run);
   }
   run++;
   return found;
-}
-
-void alarm_handler(int sig){
-  // Check memory?
-  if(check_memory() == 0){
-    //keep running
-    setup_timer();
-  }
-  else{
-    //Done
-    printf("[Info] Exiting\n");
-    exit(1);
-  }
-}
-
-void setup_timer(){
-  signal(SIGALRM,alarm_handler);
-  alarm(SPIN_TIME);
 }
 
 int main(int argc, char* argv[]){
@@ -85,7 +64,7 @@ int main(int argc, char* argv[]){
   void* addr1, *addr2;
   unsigned long long phys1,phys2;
   int i,j, delta, done=0;
-  printf("[Info] Searching for good addresses");
+  //  printf("[Info] Searching for good addresses");
   for(i=0;i<PAGES;i++){
     if(i%(PAGES/10) == 0)
       printf(".");
@@ -105,33 +84,14 @@ int main(int argc, char* argv[]){
       }
       delta = abs(phys1 - phys2) - PHYS_PAGE_DELTA;
       //      printf("DELTA: %i\n",abs(delta));
-      if( delta < 10 && delta > -10){
-        done = 1;
-        printf("\n[Info] Phys pages: %lld %lld Delta: %i\n",phys1,phys2,delta);
-        break;
+      if( delta == 0){
+
+        printf("[Info] Starting with addresses: 0x%08X, 0x%08X\n",addr1,addr2);
+        printf("[Info] Physical Page Numbers: %lld, %lld\n",phys1,phys2);
+        loop(addr1,addr2,NUM_ITERS);
+        check_memory();
       }
     }
-    if(done)
-      break;
   }
-
-  if(!done){
-    printf("\n");
-    printf("[Info] Unable to find reasonable addresses 8MB apart\n");
-    return 1;
-  }
-
-  ((char*)addr1)[0] = 'm';
-  ((char*)addr2)[0] = 'm';
-
-
-  // Setup the timer
-  setup_timer();
-
-  printf("[Info] Starting with addresses: 0x%08X, 0x%08X\n",addr1,addr2);
-  printf("[Info] Physical Page Numbers: %lld, %lld\n",
-         read_pagemap((unsigned long)addr1),read_pagemap((unsigned long)addr2));
-  printf("[Info] Running tight loop for %i second intervals\n",SPIN_TIME);
-  loop(addr1,addr2);
 
 }

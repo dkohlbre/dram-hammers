@@ -25,11 +25,11 @@ pagemap_read32.o: pagemap_read.c pagemap_read.h
 pagemap_read64.o: pagemap_read.c pagemap_read.h
 	${CC} -m64 ${CFLAGS} -o pagemap_read64.o -c pagemap_read.c
 
-loop32.o: loop32.S
-	${CC} -m32 ${ASFLAGS} -c loop32.S
+loop32.o: loop32.c
+	${CC} -m32 ${CFLAGS} -c loop32.c
 
-loop64.o: loop64.S
-	${CC} -m64 ${ASFLAGS} -c loop64.S
+loop64.o: loop64.c
+	${CC} -m64 ${CFLAGS} -c loop64.c
 
 sanity32.o: sanity.c
 	${CC} -m32 ${CFLAGS} -o sanity32.o -c sanity.c
