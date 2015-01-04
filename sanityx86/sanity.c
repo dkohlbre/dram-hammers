@@ -13,7 +13,7 @@ void alarm_handler(int sig);
 
 #define PAGE_SIZE 4096
 #define PAGES 8192
-#define NUM_ITERS 100000000
+#define NUM_ITERS 10000000
 #define PHYS_PAGE_DELTA 2000
 //Define to randomize addresses every time
 #define RANDOMIZE_ADDRESS
@@ -84,7 +84,8 @@ int main(int argc, char* argv[]){
       //      printf("DELTA: %i\n",abs(delta));
       if( delta == 0){
 
-        printf("[Info] Starting with addresses: 0x%08X, 0x%08X\n",addr1,addr2);
+        printf("[Info] %i iterations with addresses: 0x%08X, 0x%08X\n",
+               NUM_ITERS,addr1,addr2);
         printf("[Info] Physical Page Numbers: %lld, %lld\n",phys1,phys2);
         loop(addr1,addr2,NUM_ITERS);
         check_memory();
