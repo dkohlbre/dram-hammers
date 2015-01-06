@@ -10,8 +10,8 @@ LDFLAGS :=
 LDLIBS :=
 
 # sources
-sources := loop32.S loop64.S sanity.c
-targets := sanity32 sanity64 benchmark32 benchmark64
+sources := loop32.S loop64.S hammertest.c
+targets := hammertest32 hammertest64 benchmark32 benchmark64
 
 # gmake magic
 .PHONY: default all clean generate
@@ -31,17 +31,17 @@ loop32.o: loop32.c
 loop64.o: loop64.c
 	${CC} -m64 ${CFLAGS} -c loop64.c
 
-sanity32.o: sanity.c
-	${CC} -m32 ${CFLAGS} -o sanity32.o -c sanity.c
+hammertest32.o: hammertest.c
+	${CC} -m32 ${CFLAGS} -o hammertest32.o -c hammertest.c
 
-sanity64.o: sanity.c
-	${CC} -m64 ${CFLAGS} -o sanity64.o -c sanity.c
+hammertest64.o: hammertest.c
+	${CC} -m64 ${CFLAGS} -o hammertest64.o -c hammertest.c
 
-sanity32: sanity32.o loop32.o pagemap_read32.o
-	${CC} -m32 ${LDFLAGS} -o sanity32 loop32.o pagemap_read32.o sanity32.o
+hammertest32: hammertest32.o loop32.o pagemap_read32.o
+	${CC} -m32 ${LDFLAGS} -o hammertest32 loop32.o pagemap_read32.o hammertest32.o
 
-sanity64: sanity64.o loop64.o pagemap_read64.o
-	${CC} -m64 ${LDFLAGS} -o sanity64 loop64.o pagemap_read64.o sanity64.o
+hammertest64: hammertest64.o loop64.o pagemap_read64.o
+	${CC} -m64 ${LDFLAGS} -o hammertest64 loop64.o pagemap_read64.o hammertest64.o
 
 bench32.o: bench32.S
 	${CC} -m32 ${ASFLAGS} -c bench32.S
