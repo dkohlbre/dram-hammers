@@ -3,18 +3,18 @@
 #include <string.h>
 #include <signal.h>
 
-void bench(int* counter,void* addr1, void* addr2);
 
 unsigned int prev_ct;
 unsigned int counter;
 
+void bench(int* counter,void* addr1, void* addr2);
 void setup_timer();
 int check_memory();
 void alarm_handler(int sig);
 
 #define PAGE_SIZE 4096
 #define PAGES 8192
-#define SPIN_TIME 2
+#define SPIN_TIME 10
 
 //Define to randomize addresses every time
 #define RANDOMIZE_ADDRESS
@@ -25,7 +25,7 @@ unsigned char mpage[PAGE_SIZE];
 int run;
 
 void alarm_handler(int sig){
-  printf("[Info] %i loop iteration count.\n",counter);
+  //  printf("[Info] %i loop iteration count.\n",counter);
   printf("[Info] %i iterations in the last %i seconds.\n",(counter-prev_ct),SPIN_TIME);
   prev_ct = counter;
   setup_timer();
@@ -50,10 +50,8 @@ int main(int argc, char* argv[]){
 
   // Setup the timer
   setup_timer();
-  
-  //TODO: These addresses are bad, see the paper:
-  // Importantly, we chose the values of X and Y so that they map to the same
-  // bank, but to diﬀerent rows within the bank
+
+  // Choose some random addresses for benchmarking purposes
   void* addr1 = &(memory[PAGE_SIZE*(PAGES/5) + 50]);
   void* addr2 = &(memory[PAGE_SIZE*(PAGES/5)*3 + 50]);
 
