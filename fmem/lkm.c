@@ -271,14 +271,14 @@ static ssize_t write_mem(struct file *file, const char __user *buf,
      * it must also be accessed uncached by the kernel or data
      * corruption may occur.
      */
-    ptr = xlate_dev_mem_ptr(p);
+    ptr = my_xlate_dev_mem_ptr(p);
     if (!ptr) {
       if (written)
         break;
       return -EFAULT;
     }
     copied = copy_from_user(ptr, buf, sz);
-    unxlate_dev_mem_ptr(p, ptr);
+    my_unxlate_dev_mem_ptr(p, ptr);
     if (copied) {
       written += sz - copied;
       if (written)
