@@ -12,7 +12,7 @@
 
 FILE* f;
 
-unsigned long long read_pagemap(unsigned long virt_addr){
+unsigned long long read_pagemap(void* virt_addr){
   int i, c, status;
   uint64_t read_val, file_offset;
   if(!f){
@@ -25,7 +25,7 @@ unsigned long long read_pagemap(unsigned long virt_addr){
 
   //Shifting by virt-addr-offset number of bytes
   //and multiplying by the size of an address (the size of an entry in pagemap file)
-  file_offset = virt_addr / getpagesize() * PAGEMAP_ENTRY;
+  file_offset = ((unsigned long long)virt_addr) / getpagesize() * PAGEMAP_ENTRY;
   status = fseek(f, file_offset, SEEK_SET);
   if(status){
     perror("Failed to do fseek!");

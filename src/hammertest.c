@@ -4,8 +4,13 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <inttypes.h>
+#include <sys/mman.h>
+#include <fcntl.h>
 #include "pagemap_read.h"
 
+
+// Define for using /dev/fmem
+#define USE_FMEM
 
 /** Configure the test here **/
 #define PAGE_SIZE 4096
@@ -14,7 +19,7 @@
 #define PHYS_PAGE_DELTA 2000
 
 // Memory array for testing
-unsigned char memory[PAGE_SIZE*PAGES];
+unsigned char *memory;
 
 // Utility page holding our data pattern
 unsigned char mpage[PAGE_SIZE];
@@ -31,7 +36,8 @@ int check_memory(){
   found = 0;
   for(i=0;i<PAGES;i++){
     if(memcmp(&(memory[i*PAGE_SIZE]),mpage,PAGE_SIZE) != 0){
-      printf("[ALERT] Difference found! Page #%i:\n",i);
+      printf("[ALERT] Difference found! Phyiscal page #%i:\n",
+             read_pagemap(&(memory[PAGE_SIZE*i])));
       for(j=0;j<PAGE_SIZE;j++){
         printf("%02X ",memory[(i*PAGE_SIZE)+j]);
       }
@@ -48,6 +54,35 @@ int check_memory(){
   return found;
 }
 
+// Wrapper for read_pagemap
+unsigned long long _read_pagemap(void *addr){
+#ifdef USE_FMEM
+  return ((unsigned long long)addr)/PAGE_SIZE;
+#else
+  return read_pagemap(addr);
+#endif
+}
+
+#ifdef USE_FMEM
+
+// Grab an allocation via /dev/fmem
+// Requires using the modified fmem kmodule
+// start_page defines an optional starting physical page number
+unsigned char* setup_mem(int start_page){
+  int fd = open("/dev/fmem", O_RDWR);
+  if(fd <= 0){
+    return NULL;
+  }
+
+  int addr = start_page==0?0x11111b30000:(start_page*PAGE_SIZE);
+
+  void *map = mmap(NULL, PAGES*PAGE_SIZE, PROT_READ | PROT_WRITE,
+                   MAP_SHARED, fd, addr);
+  return (unsigned char*)(map <= 0?NULL:map);
+}
+
+#endif
+
 int main(int argc, char* argv[]){
   // I hate everything
   setbuf(stdout, NULL);
@@ -55,6 +90,19 @@ int main(int argc, char* argv[]){
   unsigned char val = 'm';
 
   // Set memory (base memory and the utility page)
+
+#ifdef USE_FMEM
+  int start_page = 0;
+  memory = setup_mem(start_page);
+#else
+  memory = malloc(PAGE_SIZE*PAGES);
+#endif
+
+
+  if(memory == NULL){
+    printf("[Error] Unable to get valid memory!\n");
+    exit(1);
+  }
   memset(memory,val,PAGE_SIZE*PAGES);
   memset(mpage,val,PAGE_SIZE);
 
@@ -76,12 +124,12 @@ int main(int argc, char* argv[]){
     addr1 = &(memory[PAGE_SIZE*i]);
     for(j=0;j<PAGES;j++){
       addr2 = &(memory[PAGE_SIZE*j]);
-      phys1 = read_pagemap((unsigned long)addr1);
+      phys1 = _read_pagemap(addr1);
       if(phys1 <= 0){
         printf("Error getting pagemap1\n");
         exit(1);
       }
-      phys2 = read_pagemap((unsigned long)addr2);
+      phys2 = _read_pagemap(addr2);
       if(phys2 <= 0){
         printf("Error getting pagemap2\n");
         exit(1);
