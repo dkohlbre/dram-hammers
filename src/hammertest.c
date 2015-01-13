@@ -58,18 +58,16 @@ int check_memory(){
 
 // Grab an allocation via /dev/fmem
 // Requires using the modified fmem kmodule
-// start_page defines an optional starting physical page number
-unsigned char* setup_mem(int start_page){
+// start_addr defines an optional starting physical address number
+unsigned char* setup_mem(unsigned long long start_addr){
 #ifdef USE_FMEM
   int fd = open("/dev/fmem", O_RDWR);
   if(fd <= 0){
     return NULL;
   }
 
-  int addr = start_page==0?0x11111b30000:(start_page*PAGE_SIZE);
-
   void *map = mmap(NULL, PAGES*PAGE_SIZE, PROT_READ | PROT_WRITE,
-                   MAP_SHARED, fd, addr);
+                   MAP_SHARED, fd, start_addr);
   return (unsigned char*)(map <= 0?NULL:map);
 #else
   return malloc(PAGE_SIZE*PAGES);
@@ -84,8 +82,8 @@ int main(int argc, char* argv[]){
 
   // Set memory (base memory and the utility page)
 
-  int start_page = 0;
-  memory = setup_mem(start_page);
+  unsigned long long start_addr = 0;
+  memory = setup_mem(start_addr);
 
   if(memory == NULL){
     printf("[Error] Unable to get valid memory!\n");
