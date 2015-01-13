@@ -66,10 +66,12 @@ unsigned char* setup_mem(unsigned long long start_addr){
     return NULL;
   }
 
+  printf("[Info] mmaping /dev/fmem...\n");
   void *map = mmap(NULL, PAGES*PAGE_SIZE, PROT_READ | PROT_WRITE,
                    MAP_SHARED, fd, start_addr);
   return (unsigned char*)(map <= 0?NULL:map);
 #else
+  printf("[Info] mallocing space...\n");
   return malloc(PAGE_SIZE*PAGES);
 #endif
 }
@@ -94,10 +96,10 @@ int main(int argc, char* argv[]){
 
   run = 0;
 
-  printf("[Info] Memory starts at %p, physical page %i.\n"
+  printf("[Info] Memory starts at %p, pfn %i.\n"
          "[Info] Set as %iMB byte region, value of 0x%02X.\n",
          memory,read_pagemap(memory),(PAGE_SIZE*PAGES)/(1024*1024),val);
-  printf("[Info] Finding addresses %i physical pages apart and "
+  printf("[Info] Finding addresses %i physical frames apart and "
          "running %i iterations on them.\n",PHYS_PAGE_DELTA,NUM_ITERS);
 
   // Importantly, we chose the values of X and Y so that they map to the same
@@ -122,8 +124,8 @@ int main(int argc, char* argv[]){
         exit(1);
       }
       if(abs(phys1 - phys2) == PHYS_PAGE_DELTA ){
-        printf("[Info] Running with addresses(physical): "
-               "0x%016X(%lld), 0x%016X(%lld)\n",
+        printf("[Info] Running with addresses(pfn): "
+               "%p(%lld), %p(%lld)\n",
                addr1,phys1,addr2,phys2);
         loop(addr1,addr2,NUM_ITERS);
         check_memory();
