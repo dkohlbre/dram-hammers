@@ -11,6 +11,8 @@
 
 // Define for using /dev/fmem
 #define USE_FMEM
+// Defined when not using fmem to use malloc instead of bss
+//#define USE_MALLOC
 
 /** Configure the test here **/
 #define PAGE_SIZE 4096
@@ -20,6 +22,10 @@
 
 // Memory array for testing
 unsigned char *memory;
+#if !defined(USE_FMEM) && !defined(USE_MALLOC)
+unsigned char bss_memory[PAGE_SIZE*PAGES];
+#endif
+
 
 // Utility page holding our data pattern
 unsigned char mpage[PAGE_SIZE];
@@ -70,9 +76,21 @@ unsigned char* setup_mem(unsigned long long start_addr){
   void *map = mmap(NULL, PAGES*PAGE_SIZE, PROT_READ | PROT_WRITE,
                    MAP_SHARED, fd, start_addr);
   return (unsigned char*)(map <= 0?NULL:map);
-#else
+#elif defined(USE_MALLOC)
   printf("[Info] mallocing space...\n");
   return malloc(PAGE_SIZE*PAGES);
+#else
+  printf("[Info] Using bss...\n");
+  return bss_memory;
+#endif
+
+}
+
+unsigned long _read_pagemap(void* addr){
+#ifdef USE_FMEM
+  return (((uintptr_t)memory)-((uintptr_t)addr))/PAGE_SIZE;
+#else
+  return read_pagemap(addr);
 #endif
 }
 
@@ -98,7 +116,7 @@ int main(int argc, char* argv[]){
 
   printf("[Info] Memory starts at %p, pfn %i.\n"
          "[Info] Set as %iMB byte region, value of 0x%02X.\n",
-         memory,read_pagemap(memory),(PAGE_SIZE*PAGES)/(1024*1024),val);
+         memory,_read_pagemap(memory),(PAGE_SIZE*PAGES)/(1024*1024),val);
   printf("[Info] Finding addresses %i physical frames apart and "
          "running %i iterations on them.\n",PHYS_PAGE_DELTA,NUM_ITERS);
 
@@ -113,12 +131,12 @@ int main(int argc, char* argv[]){
     addr1 = &(memory[PAGE_SIZE*i]);
     for(j=0;j<PAGES;j++){
       addr2 = &(memory[PAGE_SIZE*j]);
-      phys1 = read_pagemap(addr1);
+      phys1 = _read_pagemap(addr1);
       if(phys1 <= 0){
         printf("Error getting pagemap1\n");
         exit(1);
       }
-      phys2 = read_pagemap(addr2);
+      phys2 = _read_pagemap(addr2);
       if(phys2 <= 0){
         printf("Error getting pagemap2\n");
         exit(1);
