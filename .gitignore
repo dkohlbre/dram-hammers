@@ -1,3 +1,8 @@
 # ignore generated object files
 *.o
 results/*
+src/hammertest64
+src/hammertest32
+src/benchmark32
+src/benchmark64
+*.o.cmd
