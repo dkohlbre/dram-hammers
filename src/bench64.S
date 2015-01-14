@@ -13,5 +13,5 @@ lstart:
 	mov rax,[rdx]
 	clflush [rcx]
 	clflush [rdx]
-	mfence
+//	mfence
 	jmp lstart

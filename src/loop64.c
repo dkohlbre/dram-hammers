@@ -5,6 +5,6 @@ void loop(void* addr1, void* addr2, int iters){
     asm volatile("mov (%0), %%rbx" : : "r" (addr2) : "rbx");
     asm volatile("clflush (%0)" : : "r" (addr1) : "memory");
     asm volatile("clflush (%0)" : : "r" (addr2) : "memory");
-    asm volatile("mfence");
+    //    asm volatile("mfence");
   }
 }
