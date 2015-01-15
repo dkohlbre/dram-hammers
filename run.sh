@@ -7,7 +7,7 @@ mkdir -p results
 mfg=$(sudo dmidecode | grep "Handle 0x0010" -A 19 | grep Manufacturer | cut -d ':' -f 2 | tr -d ' \n')
 serial=$(sudo dmidecode | grep "Handle 0x0010" -A 19 | grep "Serial Number" | cut -d ':' -f 2 | tr -d ' \n')
 
-name=results/$mfg$serial
+name=results/$mfg.$serial
 i=1
 if [[ -e $name.$i ]] ; then
     while [[ -e $name.$i ]] ; do
@@ -17,5 +17,7 @@ fi
 
 name=$name.$i
 
+git log -n 1 | grep commit | tee $name
+date | tee $name
 sudo dmidecode | grep "Handle 0x0010" -A 19 | tee $name
 sudo ./$HAMMER_BIN | tee -a $name

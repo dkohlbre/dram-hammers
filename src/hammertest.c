@@ -6,6 +6,7 @@
 #include <inttypes.h>
 #include <sys/mman.h>
 #include <fcntl.h>
+#include <sys/mman.h>
 #include "pagemap_read.h"
 
 // Define to vary target pfn delta, rather than changing addr pairs
@@ -21,8 +22,8 @@
 
 /** Configure the test here **/
 #define PAGE_SIZE 4096
-#define PAGES 65536
-#define NUM_ITERS 100000000
+#define PAGES 65536*6
+#define NUM_ITERS 150000000
 #define PHYS_PAGE_DELTA 2000
 
 // Memory array for testing
@@ -93,9 +94,19 @@ unsigned char* setup_mem(){
   return (unsigned char*)(map <= 0?NULL:map);
 #elif defined(USE_MALLOC)
   printf("[Info] mallocing space...\n");
-  return malloc(PAGE_SIZE*PAGES);
+  unsigned char* a = malloc(PAGE_SIZE*PAGES);
+  if(mlockall(MCL_CURRENT) < 0){
+    printf("[Error] Unable to mlockall()\n");
+    return NULL;
+  }
+  return a;
+
 #else
   printf("[Info] Using bss...\n");
+  if(mlockall(MCL_CURRENT) < 0){
+    printf("[Error] Unable to mlockall()\n");
+    return NULL;
+  }
   return bss_memory;
 #endif
 
@@ -155,7 +166,7 @@ int main(int argc, char* argv[]){
   // I hate everything
   setbuf(stdout, NULL);
 
-  unsigned char val = 'm';
+  unsigned char val = 0xff;
 
   // Set memory (base memory and the utility page)
 
