@@ -10,8 +10,9 @@
 #include "pagemap_read.h"
 
 // Define to vary target pfn delta, rather than changing addr pairs
-//#define VARY_DELTA
-#define START_DELTA 200
+#define VARY_DELTA
+#define START_DELTA 1000
+//#define HAMMER_ADDR
 
 // Define for using /dev/fmem, starting offset
 //#define USE_FMEM
@@ -24,7 +25,7 @@
 #define PAGE_SIZE 4096
 #define PAGES 65536*6
 #define NUM_ITERS 150000000
-#define PHYS_PAGE_DELTA 2000
+#define PHYS_PAGE_DELTA 2048
 
 // Memory array for testing
 unsigned char *memory;
@@ -63,14 +64,14 @@ int check_memory(){
         printf("%02X ",memory[(i*PAGE_SIZE)+j]);
       }
       printf("\n");
-      found = 1;
+      found += 1;
     }
   }
-  if(!found){
+  if(found == 0){
     printf("[Info] No differences found in run #%i\n----\n",run);
   }
   else{
-    printf("[Info] Differences found in run #%i\n====\n",run);
+    printf("[Info] Differences found in %i pages run #%i\n====\n",found,run);
   }
   run++;
   return found;
@@ -113,7 +114,7 @@ unsigned char* setup_mem(){
 }
 
 
-void find_delta_run(int page_delta,void* addr1){
+int find_delta_run(int page_delta,void* addr1){
   // Importantly, we chose the values of X and Y so that they map to the same
   // bank, but to different rows within the bank (see paper)
   // Choose some addresses, then run the test on them
@@ -141,16 +142,20 @@ void find_delta_run(int page_delta,void* addr1){
              addr1,phys1,addr2,phys2);
       loop(addr1,addr2,NUM_ITERS);
       check_memory();
+      return 1;
     }
   }
+  return 0;
 }
 
 void run_all_pairs(){
   int i;
+  uintptr_t offset = ((PAGE_SIZE*PAGES) / 2) & ~((PHYS_PAGE_DELTA*PAGE_SIZE) - 1);
+  offset = offset/PAGE_SIZE;
   printf("[Info] Finding addresses %i physical frames apart\n",
-         PHYS_PAGE_DELTA);
+         offset);
   for(i=0;i<PAGES;i++){
-    find_delta_run(PHYS_PAGE_DELTA,&(memory[i*PAGE_SIZE]));
+    find_delta_run(offset,&(memory[i*PAGE_SIZE]));
   }
 }
 
@@ -159,6 +164,17 @@ void run_vary_delta(){
   printf("[Info] Varying physical frames delta.\n");
   for(i=START_DELTA;i<PAGES;i++){
     find_delta_run(i,memory);
+  }
+}
+
+void hammer_addr(){
+ int i;
+  uintptr_t offset = ((PAGE_SIZE*PAGES) / 2) & ~((PHYS_PAGE_DELTA*PAGE_SIZE) - 1);
+  offset = offset/PAGE_SIZE;
+  printf("[Info] Hammering addrs %i pfn apart.\n",
+         offset);
+  for(i=0;i<PAGES;i++){
+    while(find_delta_run(offset,&(memory[i*PAGE_SIZE])) == 1){}
   }
 }
 
@@ -189,6 +205,8 @@ int main(int argc, char* argv[]){
 
 #ifdef VARY_DELTA
   run_vary_delta();
+#elif defined(HAMMER_ADDR)
+  hammer_addr();
 #else
   run_all_pairs();
 #endif
